@@ -1,299 +1,487 @@
 # MediStock – Medicine Demand & Expiry Predictor
 
-> **MCA (Artificial Intelligence & Machine Learning) Python Mini Project**  
-> A complete, beginner-friendly healthcare inventory management and predictive analysis system built using **Python 3**, **Flask**, **MySQL 8.x**, **Pandas**, **NumPy**, and **Bootstrap 5**.
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.0.3-000000?style=for-the-badge&logo=flask&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-2.2.2-150458?style=for-the-badge&logo=pandas&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-1.26.4-013243?style=for-the-badge&logo=numpy&logoColor=white)
+![Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
+![Currency](https://img.shields.io/badge/Currency-INR%20(%E2%82%B9)-0078D4?style=for-the-badge)
+
+**MCA (Artificial Intelligence & Machine Learning) Python Mini Project**
+
+*A complete, production-grade pharmacy inventory management, shelf-life monitoring, and transparent demand forecasting system tailored for Indian healthcare dispensaries.*
+
+</div>
 
 ---
 
-## 1. Project Introduction
+## 📌 Table of Contents
 
-**MediStock** is a web-based pharmaceutical inventory management application designed specifically for small pharmacies, retail medical stores, and healthcare dispensaries. The system automates stock control, proactively tracks medicine shelf life using date arithmetic, prevents expired medicine dispensing, and forecasts future medicine demand using mathematical and machine learning techniques.
-
----
-
-## 2. Problem Statement
-
-Small pharmacies and clinics frequently face two major financial and clinical dilemmas:
-1. **Medicine Expiration & Wastage**: Over 10-15% of pharmacy stock expires on shelves unnoticed, leading to heavy financial write-offs and potential safety hazards if dispensed inadvertently.
-2. **Stockouts of Essential Medicines**: Stock shortages of critical medicines (e.g., antipyretics, antibiotics, insulin) disrupt patient therapy due to reactive, manual reordering.
-3. **Lack of Explainable Forecasting**: Enterprise ERPs are prohibitively expensive and act as "black boxes". Pharmacy managers need a transparent, easy-to-understand demand predictor.
-
----
-
-## 3. Project Objectives
-
-- **Reduce Wastage**: Monitor expiration dates automatically and classify inventory into 5 distinct risk tiers (Expired, &le;30 days, &le;60 days, &le;90 days, Safe Stock).
-- **Enforce Dispensing Safety**: Automatically prevent expired batches from being dispensed or treated as active stock.
-- **Predict Future Demand**: Calculate transparent next-month demand based on historical monthly consumption using **Pandas**, **NumPy**, and **Linear Regression (Ordinary Least Squares)**.
-- **Maintain Audit Integrity**: Track every stock addition, outward dispensation, and write-off in an immutable transaction log.
-- **Demonstrate Python Core Concepts**: Serve as an exemplary MCA academic project demonstrating OOP, database integration, statistical calculations, file I/O, and clean web architecture.
+- [1. Project Overview](#1-project-overview)
+- [2. Problem Statement & Healthcare Impact](#2-problem-statement--healthcare-impact)
+- [3. Key Modules & Features](#3-key-modules--features)
+- [4. Technology Stack](#4-technology-stack)
+- [5. System Architecture](#5-system-architecture)
+- [6. MySQL Database Design (`medistock_db`)](#6-mysql-database-design-medistock_db)
+- [7. Step-by-Step Installation & Localhost Setup](#7-step-by-step-installation--localhost-setup)
+- [8. Default Demo Credentials](#8-default-demo-credentials)
+- [9. Demand Prediction Mathematical Logic](#9-demand-prediction-mathematical-logic)
+- [10. Python Concepts Demonstrated (MCA Syllabus)](#10-python-concepts-demonstrated-mca-syllabus)
+- [11. Complete MCA Viva Voce Preparation Guide](#11-complete-mca-viva-voce-preparation-guide)
+- [12. Folder Structure](#12-folder-structure)
+- [13. Author & Acknowledgements](#13-author--acknowledgements)
 
 ---
 
-## 4. Technologies Used
+## 1. Project Overview
 
-| Tier | Technology | Description |
+**MediStock** is an end-to-end pharmaceutical stock control and predictive intelligence platform designed for small-to-medium retail pharmacies, hospital dispensaries, and community clinics across India.
+
+### Core Objectives:
+1. **Eliminate Medicine Expiry Losses**: Automatically calculates remaining shelf life in days using Python `datetime`, proactively classifies stock into 5 safety tiers, and blocks expired medicines from being dispensed.
+2. **Prevent Stock Shortages**: Identifies low-stock items against minimum safety thresholds and generates dynamic reorder recommendations.
+3. **Explainable Demand Forecasting**: Uses transparent mathematical algorithms (Linear Regression via Ordinary Least Squares and Moving Averages) powered by **Pandas** and **NumPy** to predict next-month consumption based on historical sales.
+4. **Indian Currency & Market Realism**: All financial analytics, valuation KPIs, and unit prices are localized in **Indian Rupees (₹ / INR)**.
+
+---
+
+## 2. Problem Statement & Healthcare Impact
+
+In retail pharmacies across India:
+- **Financial Loss via Expiry**: 10%–15% of purchased pharmaceuticals expire undetected on shelves, causing massive annual financial write-offs.
+- **Patient Safety Hazards**: Accidental dispensation of expired or near-expiry medicines poses severe clinical and legal risks.
+- **Stockout Crises**: Essential antipyretics, antibiotics, and cardiovascular drugs frequently go out of stock due to manual, intuitive purchasing rather than data-driven demand forecasting.
+- **High ERP Barrier**: Commercial ERPs are bloated, expensive, and act as opaque "black boxes". MediStock provides an open, transparent, lightweight Python-driven alternative.
+
+---
+
+## 3. Key Modules & Features
+
+### 📊 Module 1: Executive Analytics Dashboard
+- **Real-Time KPIs**: Total Medicines Cataloged, Available Stock Units, Low-Stock Alerts, Expired Batches, Expiring Within 30 Days, and Total Inventory Valuation in Indian Rupees (₹).
+- **Interactive Visualizations**:
+  - *Medicine Category Distribution* (Donut Chart)
+  - *Monthly Consumption & Sales History* (Bar Chart)
+  - *Stock Health Distribution* (Pie Chart)
+  - *Predicted vs. Actual Demand Trends* (Area Chart)
+- **Recent Stock Activity Log**: Audited view of the latest inward/outward inventory transactions.
+
+### 💊 Module 2: Medicine Management
+- Full **CRUD** operations (Create, Read, Update, Delete) for medicine records.
+- **Attributes Tracked**: Medicine Name, Category (Antibiotics, Analgesics, Antidiabetic, Cardiovascular, etc.), Manufacturer, Batch Number (Unique), Purchase Cost (₹), Selling Price (₹), Quantity, Minimum Stock Level, Manufacturing Date, Expiry Date, and Supplier Name.
+- **Strict Business Validations**:
+  - Expiry Date must be strictly after Manufacturing Date.
+  - Non-negative quantities and positive pricing checks.
+  - Batch number uniqueness enforcement.
+- Real-time search by medicine name, category filter, and stock-status filter.
+
+### 📦 Module 3: Inventory Monitoring & Movement
+- Dedicated stock-level tracking with color-coded badges (`In Stock`, `Low Stock`, `Out of Stock`).
+- **Stock Movement Operations**:
+  - **Stock IN**: Add newly arrived supplier consignments with batch updates.
+  - **Stock OUT**: Dispense medicine for patient sales with automated stock deduction.
+- **Immutable Transaction History**: Every movement logs timestamp, transaction type (`IN`, `OUT`, `ADJUSTMENT`, `EXPIRED_DISCARD`), quantity delta, reason, and user ID into `inventory_transactions`.
+
+### ⏳ Module 4: Expiry Monitoring & Safety Quarantine
+- Automated day-to-day shelf-life computation using Python's `datetime.date`.
+- **5-Tier Expiry Classification**:
+  | Tier | Days Remaining | Action / Status |
+  |---|---|---|
+  | **Expired** | $< 0$ Days | Immediate Quarantine. Dispensation strictly blocked. |
+  | **Critical** | $1 - 30$ Days | High alert. Immediate FEFO discount or supplier return. |
+  | **Warning** | $31 - 60$ Days | Expedited stock movement recommended. |
+  | **Attention** | $61 - 90$ Days | Monitored stock. |
+  | **Safe** | $> 90$ Days | Healthy active stock. |
+- **Quarantine & Discard Action**: 1-click write-off that marks the batch as discarded and logs a zero-stock adjustment.
+
+### 📈 Module 5: Demand Prediction Engine
+- Transparent, explainable predictive analytics using **NumPy** and **Pandas**.
+- Select any cataloged medicine to analyze its historical monthly sales.
+- **Calculates**:
+  - Average monthly consumption rate.
+  - Trend direction & slope ($m$).
+  - Estimated next-month demand ($y_{pred}$).
+  - Recommended procurement reorder quantity based on buffer formulas.
+- Displays historical consumption bar charts and trend regression lines.
+- Safe handling of new items: displays *"Insufficient Historical Data"* if fewer than 2 monthly data points exist.
+
+### 📑 Module 6: Reports & Dynamic CSV Export
+- View and filter reports across:
+  - Complete Medicine Inventory
+  - Low-Stock Medicines
+  - Expired & Quarantined Batches
+  - Medicines Expiring Soon (Within 90 Days)
+  - Sales & Consumption Ledger
+  - Demand Forecasting & Reorder Matrix
+- **Native CSV Export**: Uses Python's built-in `csv` module and `io.StringIO` to generate downloadable `.csv` spreadsheets on demand with proper currency headers in Indian Rupees (`₹`).
+
+---
+
+## 4. Technology Stack
+
+| Layer | Component | Description |
 |---|---|---|
-| **Backend** | Python 3.10+ | Core application logic and data processing |
-| **Framework** | Flask 3.x | Lightweight WSGI web framework & routing |
-| **Sessions** | Flask Sessions | Secure user authentication state management |
-| **Database** | MySQL 8.x | Relational database management system |
-| **DB Driver** | `mysql-connector-python` | Official Python-to-MySQL parameterized connector |
-| **Data Analysis** | Pandas & NumPy | Historical grouping, aggregations, matrix & array math |
-| **Visualization** | Chart.js & Matplotlib | Interactive canvas charts and trend graphs |
-| **Frontend** | HTML5, CSS3, JS, Bootstrap 5 | Clean, responsive, modern medical SaaS UI |
-| **Icons** | Bootstrap Icons | Consistent iconography |
+| **Programming Language** | **Python 3.10+** | Object-Oriented backend logic, date computations, algorithms |
+| **Web Framework** | **Flask 3.0.3** | WSGI routing, blueprints, templating, session state management |
+| **Relational Database** | **MySQL 8.x** | Persistent ACID-compliant relational storage |
+| **Database Driver** | **`mysql-connector-python`** | Parameterized queries preventing SQL Injection |
+| **Data Processing** | **Pandas 2.2.2** | Grouping, monthly time-period aggregations, dataframes |
+| **Numerical Calculations** | **NumPy 1.26.4** | Ordinary Least Squares regression, array mathematics |
+| **Frontend UI** | **HTML5 + CSS3 + Bootstrap 5.3** | Clean, responsive healthcare administrative dashboard |
+| **Icons & Visuals** | **Bootstrap Icons & Chart.js** | Medical iconography and dynamic SVG/Canvas charts |
+| **Currency Format** | **Indian Rupees (₹ / INR)** | Localized numbering and retail pricing |
 
 ---
 
 ## 5. System Architecture
 
-```
-[ Web Browser / Client ]
-         │ (HTTP Requests: GET, POST)
-         ▼
-[ Flask Application (app.py) ]
-    ├── Authentication & Session Guard (routes/auth.py)
-    ├── Route Blueprints (routes/medicines.py, inventory.py, expiry.py, etc.)
-    ├── OOP Models (models/medicine.py, models/inventory.py)
-    ├── Core Services:
-    │     ├── ExpiryChecker (services/expiry_checker.py)
-    │     ├── DemandPredictor (services/demand_prediction.py - Pandas/NumPy)
-    │     └── InventoryAnalysisService (services/inventory_analysis.py)
-    ▼
-[ MySQL 8.x Database (medistock_db) ]
-    ├── users (Authentication)
-    ├── medicines (Master catalog & batch details)
-    ├── sales (Historical consumption logs)
-    └── inventory_transactions (Stock movement audit trail)
-```
-
----
-
-## 6. Database Design (`medistock_db`)
-
-The database consists of 4 relational tables:
-
-### 1. `medicines`
-- `medicine_id`: INT AUTO_INCREMENT PRIMARY KEY
-- `medicine_name`: VARCHAR(150) NOT NULL
-- `category`: VARCHAR(80) NOT NULL
-- `manufacturer`: VARCHAR(150) NOT NULL
-- `batch_number`: VARCHAR(50) NOT NULL UNIQUE
-- `purchase_price`: DECIMAL(10, 2) NOT NULL
-- `selling_price`: DECIMAL(10, 2) NOT NULL
-- `quantity`: INT NOT NULL DEFAULT 0
-- `minimum_stock`: INT NOT NULL DEFAULT 20
-- `manufacturing_date`: DATE NOT NULL
-- `expiry_date`: DATE NOT NULL
-- `supplier_name`: VARCHAR(150) NOT NULL
-- `created_at`: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
-### 2. `sales`
-- `sale_id`: INT AUTO_INCREMENT PRIMARY KEY
-- `medicine_id`: INT (Foreign Key &rarr; `medicines.medicine_id`)
-- `quantity_sold`: INT NOT NULL
-- `sale_date`: DATE NOT NULL
-- `total_amount`: DECIMAL(10, 2) NOT NULL
-- `patient_reference`: VARCHAR(100)
-- `created_at`: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
-### 3. `inventory_transactions`
-- `transaction_id`: INT AUTO_INCREMENT PRIMARY KEY
-- `medicine_id`: INT (Foreign Key &rarr; `medicines.medicine_id`)
-- `transaction_type`: ENUM('IN', 'OUT', 'ADJUSTMENT', 'EXPIRED_DISCARD')
-- `quantity`: INT NOT NULL
-- `transaction_date`: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-- `description`: VARCHAR(255) NOT NULL
-- `performed_by`: VARCHAR(50)
-
-### 4. `users`
-- `user_id`: INT AUTO_INCREMENT PRIMARY KEY
-- `username`: VARCHAR(50) NOT NULL UNIQUE
-- `password`: VARCHAR(255) NOT NULL
-- `full_name`: VARCHAR(100) NOT NULL
-- `role`: VARCHAR(30)
-- `created_at`: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
----
-
-## 7. Project Folder Structure
-
-```
-MediStock/
-├── app.py                     # Main Flask Application Entry Point
-├── config.py                  # Database & Flask Secret Configurations
-├── database.sql               # Complete MySQL Schema & Seed Sample Data
-├── requirements.txt           # Python Package Dependencies
-├── README.md                  # Project Documentation & Viva Guide
-├── run_project.bat            # 1-Click Windows Batch Runner
-├── run_project.ps1            # 1-Click PowerShell Script
-│
-├── database/
-│   └── db_connection.py       # MySQL Connection & Parameterized Execution
-│
-├── models/
-│   ├── medicine.py            # Medicine OOP Class with Business Validation
-│   └── inventory.py           # Inventory Transaction Model
-│
-├── routes/
-│   ├── auth.py                # Login, Logout, Session Decorator
-│   ├── dashboard.py           # Executive KPIs & 4 Interactive Charts
-│   ├── medicines.py           # Medicine CRUD, Filtering & Searching
-│   ├── inventory.py           # Stock IN/OUT Movements & Audit Log
-│   ├── expiry.py              # Shelf-Life Monitoring & Batch Quarantining
-│   ├── prediction.py          # AI/ML Demand Forecasting Engine
-│   └── reports.py             # Tabular Reports & Python CSV Streaming
-│
-├── services/
-│   ├── demand_prediction.py   # Pandas & NumPy Regression / Moving Average
-│   ├── expiry_checker.py      # Python Datetime Shelf-Life Classifier
-│   └── inventory_analysis.py  # KPI & Valuation Aggregations
-│
-├── templates/                 # Jinja2 HTML5 Bootstrap 5 Templates
-│   ├── base.html
-│   ├── login.html
-│   ├── dashboard.html
-│   ├── medicines.html
-│   ├── add_medicine.html
-│   ├── edit_medicine.html
-│   ├── inventory.html
-│   ├── expiry.html
-│   ├── prediction.html
-│   └── reports.html
-│
-└── static/
-    ├── css/style.css          # Healthcare UI Theme Stylesheet
-    └── js/script.js           # Client Interactions & Alert Dismissals
+```text
+                     ┌────────────────────────────────┐
+                     │   Web Browser (Client Tier)    │
+                     │  HTML5 + Bootstrap 5 + Chart.js │
+                     └───────────────┬────────────────┘
+                                     │ HTTP (GET / POST)
+                                     ▼
+                     ┌────────────────────────────────┐
+                     │     Flask Web Application      │
+                     │             app.py             │
+                     └───────┬──────────────┬─────────┘
+                             │              │
+              ┌──────────────┴──────┐ ┌─────┴────────────────┐
+              │  Route Blueprints   │ │   Business Services  │
+              │  ├─ auth.py         │ │  ├─ expiry_checker   │
+              │  ├─ dashboard.py    │ │  ├─ demand_predict   │
+              │  ├─ medicines.py    │ │  └─ inventory_analys │
+              │  ├─ inventory.py    │ └──────────────┬───────┘
+              │  ├─ expiry.py       │                │
+              │  ├─ prediction.py   │                │
+              │  └─ reports.py      │                │
+              └──────────────┬──────┘                │
+                             │                       │
+                             ▼                       ▼
+                     ┌────────────────────────────────┐
+                     │    Database Abstraction Layer  │
+                     │    database/db_connection.py   │
+                     │    (mysql-connector-python)    │
+                     └───────────────┬────────────────┘
+                                     │ Parameterized Queries
+                                     ▼
+                     ┌────────────────────────────────┐
+                     │        MySQL 8.x Server        │
+                     │         medistock_db           │
+                     │ ├─ users                       │
+                     │ ├─ medicines                   │
+                     │ ├─ sales                       │
+                     │ └─ inventory_transactions      │
+                     └────────────────────────────────┘
 ```
 
 ---
 
-## 8. Installation & Setup Instructions (Windows Localhost)
+## 6. MySQL Database Design (`medistock_db`)
 
-### Prerequisites:
-1. **Python 3.10+**: Download from [python.org](https://www.python.org/downloads/) (Check "Add Python to PATH").
-2. **MySQL Server 8.x**: Installed via MySQL Community Server or XAMPP/WAMP.
+The relational database adheres to Boyce-Codd Normal Form (BCNF) principles with referential integrity constraints:
 
-### Step 1: Open PowerShell or Command Prompt
-Navigate to the extracted `MediStock` folder:
-```powershell
-cd path\to\MediStock
+### 1. `users` Table
+Stores authenticated pharmacy staff credentials.
+```sql
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    role VARCHAR(30) DEFAULT 'Pharmacist',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-### Step 2: Set Up MySQL Database
-Open your MySQL terminal (or MySQL Workbench):
+### 2. `medicines` Table
+Central catalog storing medicine batches, costs, and expiry dates.
+```sql
+CREATE TABLE medicines (
+    medicine_id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_name VARCHAR(150) NOT NULL,
+    category VARCHAR(80) NOT NULL,
+    manufacturer VARCHAR(150) NOT NULL,
+    batch_number VARCHAR(50) NOT NULL UNIQUE,
+    purchase_price DECIMAL(10, 2) NOT NULL,
+    selling_price DECIMAL(10, 2) NOT NULL,
+    quantity INT NOT NULL DEFAULT 0,
+    minimum_stock INT NOT NULL DEFAULT 20,
+    manufacturing_date DATE NOT NULL,
+    expiry_date DATE NOT NULL,
+    supplier_name VARCHAR(150) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 3. `sales` Table
+Historical dispensation records used for demand prediction.
+```sql
+CREATE TABLE sales (
+    sale_id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT NOT NULL,
+    quantity_sold INT NOT NULL,
+    sale_date DATE NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    patient_reference VARCHAR(100) DEFAULT 'Walk-in Customer',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (medicine_id) REFERENCES medicines(medicine_id) ON DELETE CASCADE
+);
+```
+
+### 4. `inventory_transactions` Table
+Audited log of all inward and outward inventory adjustments.
+```sql
+CREATE TABLE inventory_transactions (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    medicine_id INT NOT NULL,
+    transaction_type ENUM('IN', 'OUT', 'ADJUSTMENT', 'EXPIRED_DISCARD') NOT NULL,
+    quantity INT NOT NULL,
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    description VARCHAR(255) NOT NULL,
+    performed_by VARCHAR(50) DEFAULT 'admin',
+    FOREIGN KEY (medicine_id) REFERENCES medicines(medicine_id) ON DELETE CASCADE
+);
+```
+
+---
+
+## 7. Step-by-Step Installation & Localhost Setup
+
+### Prerequisites
+1. **Python 3.10+** installed ([python.org](https://www.python.org/downloads/)).
+2. **MySQL Server 8.x** installed via MySQL Community Server, XAMPP, or WAMP.
+3. Git installed.
+
+---
+
+### Step 1: Clone or Extract the Repository
+```bash
+git clone https://github.com/your-username/medistock-pharmacy-predictor.git
+cd medistock-pharmacy-predictor/MediStock
+```
+
+---
+
+### Step 2: Initialize the MySQL Database
+Open your MySQL prompt or MySQL Workbench:
 ```bash
 mysql -u root -p
 ```
-Run the provided `database.sql` script:
+Run the `database.sql` script to create `medistock_db` and seed realistic Indian pharmacy data:
 ```sql
 source database.sql;
 ```
-*(Or in PowerShell)*:
+*(On Windows PowerShell, you can also run):*
 ```powershell
 Get-Content database.sql | mysql -u root -p
 ```
 
-### Step 3: Configure Database Password
-Open `config.py` in any text editor and update your MySQL password if different from `'root'`:
+---
+
+### Step 3: Configure Database Credentials
+Open `config.py` in Visual Studio Code or any text editor and set your MySQL password:
 ```python
-MYSQL_PASSWORD = 'your_mysql_password'
+class Config:
+    SECRET_KEY = 'medistock_secret_key_mca_2026_secure'
+    MYSQL_HOST = 'localhost'
+    MYSQL_PORT = 3306
+    MYSQL_USER = 'root'
+    MYSQL_PASSWORD = 'your_mysql_password_here'  # <-- Change this to your MySQL password
+    MYSQL_DB = 'medistock_db'
 ```
 
-### Step 4: Install Dependencies & Run
-Using the provided automated script:
-```powershell
-.\run_project.ps1
-```
-*Or manually step-by-step*:
-```powershell
+---
+
+### Step 4: Create Virtual Environment & Install Dependencies
+```bash
+# Create a virtual environment
 python -m venv venv
+
+# Activate the virtual environment
+# On Windows PowerShell:
 .\venv\Scripts\Activate.ps1
+# On Windows Command Prompt:
+.\venv\Scripts\activate.bat
+# On Linux / macOS:
+source venv/bin/activate
+
+# Install required Python packages
 pip install -r requirements.txt
+```
+
+---
+
+### Step 5: Start the Flask Web Server
+```bash
 python app.py
 ```
+You should see:
+```text
+ * Serving Flask app 'app'
+ * Debug mode: on
+ * Running on http://127.0.0.1:5000
+```
 
-### Step 5: Open in Browser
-Open your web browser and visit:
-```
-http://127.0.0.1:5000
-```
+Open your browser and navigate to: **`http://127.0.0.1:5000`**
+
+*(Pro-tip: On Windows, you can also double-click `run_project.bat` or run `.\run_project.ps1` for 1-click startup!)*
 
 ---
 
-## 9. Default Login Credentials
+## 8. Default Demo Credentials
 
-| Username | Password | Full Name | Role |
+The seeded database comes pre-loaded with two test accounts:
+
+| Role | Username | Password | Access Level |
 |---|---|---|---|
-| `admin` | `admin123` | Head Pharmacist | Administrator |
-| `staff` | `staff123` | Pharmacy Assistant | Staff |
+| **Head Pharmacist** | `admin` | `admin123` | Full Administrative Privileges (CRUD, Stock Adjustments, Reports) |
+| **Pharmacy Assistant** | `staff` | `staff123` | Operational Access (Dispensing, Stock Check, Expiry View) |
 
 ---
 
-## 10. Explanation of the Demand Prediction Algorithm
+## 9. Demand Prediction Mathematical Logic
 
-The project implements two transparent, explainable prediction algorithms using **NumPy** and **Pandas**:
+Rather than relying on opaque deep learning models that cannot be explained during project evaluations, MediStock implements **transparent, mathematically rigorous algorithms**:
 
-### 1. Linear Regression (Ordinary Least Squares: $y = mx + c$)
-For a medicine with historical monthly sales $(x_1, y_1), (x_2, y_2), \dots, (x_n, y_n)$ where $x$ represents chronological monthly index and $y$ represents units sold:
+### 1. Ordinary Least Squares (OLS) Linear Regression
+Given monthly sales data points $(x_1, y_1), (x_2, y_2), \dots, (x_n, y_n)$ where $x$ is the month index ($1, 2, 3 \dots$) and $y$ is the quantity sold:
 
 1. **Calculate Slope ($m$)**:
-   $$m = \frac{n \sum (xy) - (\sum x)(\sum y)}{n \sum (x^2) - (\sum x)^2}$$
-   - Positive $m$: Medicine demand is trending upward (e.g. seasonal outbreak).
-   - Negative $m$: Medicine demand is declining.
+   $$\large m = \frac{n \sum (xy) - (\sum x)(\sum y)}{n \sum (x^2) - (\sum x)^2}$$
+   - If $m > 0$: Demand is increasing over time (upward seasonal trend).
+   - If $m < 0$: Demand is decreasing.
 
 2. **Calculate Intercept ($c$)**:
-   $$c = \frac{\sum y - m \sum x}{n}$$
+   $$\large c = \frac{\sum y - m \sum x}{n}$$
 
-3. **Predict Next Period ($x_{n+1}$)**:
-   $$y_{predicted} = m(n + 1) + c$$
+3. **Predict Next-Month Demand ($y_{pred}$)**:
+   $$\large y_{pred} = m(n + 1) + c$$
 
 ### 2. Simple Moving Average (SMA)
-Calculates the arithmetic mean of the last $k$ periods (e.g., $k = 3$ months):
-$$SMA = \frac{1}{k} \sum_{i=n-k+1}^{n} y_i$$
+For steady-state demand without strong slopes:
+$$\large SMA = \frac{1}{k} \sum_{i=n-k+1}^{n} y_i$$
+*(Where $k = 3$ represents the 3-month rolling window).*
 
-### 3. Inventory Procurement Logic:
-- **Deficit**: `Deficit = (Predicted Demand + Minimum Stock) - Available Stock`
-- **Safety Stock Buffer**: 20% of predicted demand
-- **Recommended Order**: `max(0, Deficit)`
-
----
-
-## 11. Python Programming Concepts Demonstrated
-
-1. **Object-Oriented Programming (OOP)**: `Medicine` and `InventoryTransaction` classes with constructors, property getters, encapsulation, and validation methods.
-2. **Exception Handling**: `try-except-finally` blocks in database operations and data parsing.
-3. **Python Decorators**: Custom `@login_required` decorator using `functools.wraps` for route protection.
-4. **NumPy Arrays & Mathematical Functions**: `np.array`, `np.mean`, `np.sum`, vector multiplication for linear regression.
-5. **Pandas DataFrames**: Grouping monthly sales with `.groupby()`, date period casting `.dt.to_period('M')`.
-6. **Date & Time Arithmetic**: `datetime.date` subtraction to compute remaining shelf life in days.
-7. **In-Memory File Generation**: `io.StringIO` and Python's built-in `csv` module for dynamic CSV streaming.
-8. **Parameterized SQL Queries**: `%s` place-holders preventing SQL Injection.
+### 3. Reorder Procurement Logic
+- **Safety Stock Buffer**: Calculated as $\text{Minimum Stock Level}$ (or $20\%$ of predicted demand).
+- **Total Required**: $\text{Predicted Demand} + \text{Minimum Stock}$.
+- **Net Reorder Quantity**:
+  $$\large \text{Recommended Reorder} = \max\left(0, (\text{Predicted Demand} + \text{Minimum Stock}) - \text{Available Stock}\right)$$
 
 ---
 
-## 12. Guide for Demonstrating the Project to a Teacher (Viva Guide)
+## 10. Python Concepts Demonstrated (MCA Syllabus)
 
-### Key Demonstration Workflow:
-1. **Show Login**: Log in as `admin` (`admin123`). Explain session management and password hashing.
-2. **Dashboard Overview**: Point out the 6 real-time KPI cards and the 4 interactive charts (Category Share, Monthly Sales, Stock Health, Demand Trend).
-3. **Medicine Management**: Add a new medicine (demonstrate that entering an expiry date before the manufacturing date triggers instant validation).
-4. **Inventory Movement**: Perform a "Stock IN" and "Stock OUT". Show how the stock updates immediately and an audit entry is saved in `inventory_transactions`.
-5. **Expiry Monitoring**:
-   - Highlight the red **Expired** badge (e.g. Pantoprazole).
-   - Explain why the system blocks expired batches from being dispensed.
-   - Click "Discard / Quarantine" to show the automated stock write-off.
-6. **Demand Prediction**:
-   - Select **Paracetamol 650mg**.
-   - Show the historical sales chart (100, 120, 110, 130, 140 units).
-   - Walk through the mathematical calculation box showing slope $m = +9.0$, intercept $c = 93.0$, predicted next month demand $= 147$ units, and recommended reorder quantity.
-7. **Reports & CSV Export**: Select "Complete Inventory" or "Demand Forecast" and click "Download CSV File" to show genuine `.csv` file generation.
+This project has been engineered specifically to satisfy MCA academic viva and evaluation criteria:
 
-### Common Viva Questions & Answers:
-- **Q1: Why did you use Linear Regression instead of Deep Learning?**  
-  *Answer*: Pharmacy inventory managers need transparent, explainable recommendations rather than black-box models. Linear regression clearly shows the trend slope ($m$) and seasonal direction.
-- **Q2: How do you prevent SQL injection?**  
-  *Answer*: By using parameterized queries (`cursor.execute(sql, (params,))`) through `mysql-connector-python`, ensuring user input is never concatenated into raw SQL strings.
-- **Q3: How are expired medicines prevented from being dispensed?**  
-  *Answer*: In `routes/inventory.py`, before processing any `OUT` transaction, the application checks `ExpiryChecker.classify_expiry()`. If `is_dispensable` is False, the transaction is rejected.
+1. **Object-Oriented Programming (OOP)**:
+   - Encapsulation in `Medicine` and `InventoryTransaction` classes (`models/medicine.py`).
+   - Constructor validation, getter properties (`is_expired`, `is_low_stock`).
+2. **Modular Flask Blueprints**:
+   - Clean separation of concerns with 7 dedicated blueprints (`auth`, `dashboard`, `medicines`, `inventory`, `expiry`, `prediction`, `reports`).
+3. **Python Decorators**:
+   - Custom `@login_required` decorator built with `functools.wraps` to protect routes from unauthorized URL tampering.
+4. **Data Science with NumPy & Pandas**:
+   - `pandas.DataFrame.groupby()`, `dt.to_period('M')` for temporal grouping.
+   - Vectorized dot products (`np.sum`, `np.dot`) for OLS regression.
+5. **Datetime Arithmetic**:
+   - `datetime.date` subtraction returning exact `timedelta.days` for shelf-life classification.
+6. **In-Memory Streaming & File I/O**:
+   - `io.StringIO` streaming dynamically created CSV bytes without saving junk files to disk.
+7. **Robust Error Handling**:
+   - `try-except-finally` blocks ensuring database cursors and connections are properly closed even upon query failure.
+
+---
+
+## 11. Complete MCA Viva Voce Preparation Guide
+
+### Top Viva Questions & Model Answers:
+
+#### Q1: Why did you choose Python and Flask over PHP or Django for this mini project?
+> **Answer**: Flask is a lightweight WSGI framework that gives full architectural transparency without hidden boilerplate. Python offers native numerical libraries like Pandas and NumPy, which allows us to integrate data analysis and demand forecasting directly into the web application within a single runtime.
+
+#### Q2: How does the system prevent expired medicines from being sold?
+> **Answer**: In `services/expiry_checker.py`, the method `classify_expiry()` computes the difference between `expiry_date` and `date.today()`. If the delta is less than 0, `is_dispensable` is flagged as `False`. When an operator attempts a "Stock OUT" transaction in `routes/inventory.py`, the system validates this flag and rejects the sale if expired.
+
+#### Q3: Why did you use Linear Regression instead of a Deep Learning Neural Network?
+> **Answer**: In small retail pharmacies, historical records typically span 6 to 12 months. Deep neural networks require thousands of data points to avoid severe overfitting. Linear regression and moving averages provide explainable, auditable equations ($y = mx + c$) where pharmacists can clearly understand why a specific reorder quantity is recommended.
+
+#### Q4: How is SQL Injection prevented?
+> **Answer**: We use parameterized queries exclusively through `mysql-connector-python` using `%s` placeholders. User inputs are treated strictly as query parameters by the MySQL driver, never concatenated into raw SQL strings.
+
+#### Q5: What is the significance of FEFO in pharmacy inventory?
+> **Answer**: FEFO stands for **First Expired, First Out**. The system sorts expiring batches so that medicines closest to their expiry date are prioritized for dispensing before newer batches, minimizing wastage.
+
+---
+
+## 12. Folder Structure
+
+```text
+MediStock/
+├── app.py                     # Main Flask Application Entry Point
+├── config.py                  # Database & Secret Configurations
+├── database.sql               # MySQL 8.x DDL Schema & Realistic Seed Data
+├── requirements.txt           # Python Package Manifest
+├── README.md                  # Project Documentation & Viva Guide
+├── run_project.bat            # 1-Click Windows Batch Launcher
+├── run_project.ps1            # 1-Click PowerShell Launcher
+│
+├── database/
+│   └── db_connection.py       # MySQL Connector with Connection Pooling
+│
+├── models/
+│   ├── medicine.py            # Medicine OOP Model with Business Validations
+│   └── inventory.py           # Inventory Movement Class
+│
+├── routes/
+│   ├── auth.py                # Authentication, Login/Logout & Session Guard
+│   ├── dashboard.py           # Executive KPIs & 4 Interactive Visualizations
+│   ├── medicines.py           # Medicine CRUD, Search & Category Filters
+│   ├── inventory.py           # Stock IN/OUT Movements & Audit Ledger
+│   ├── expiry.py              # Expiry Risk Classifier & Batch Quarantine
+│   ├── prediction.py          # AI/ML Demand Prediction Dashboard
+│   └── reports.py             # Tabular Reports & Dynamic CSV Streaming
+│
+├── services/
+│   ├── demand_prediction.py   # Pandas & NumPy Regression / Moving Average Engine
+│   ├── expiry_checker.py      # Datetime Shelf-Life Calculator & FEFO Engine
+│   └── inventory_analysis.py  # Valuation in ₹ & Stock Health Aggregator
+│
+├── templates/                 # Jinja2 HTML5 Bootstrap 5 Templates
+│   ├── base.html              # Layout Master with Responsive Sidebar
+│   ├── login.html             # User Authentication View
+│   ├── dashboard.html         # Main Executive Analytics Portal
+│   ├── medicines.html         # Catalog Table with Search & Filters
+│   ├── add_medicine.html      # Add New Medicine Form with Validations
+│   ├── edit_medicine.html     # Edit Medicine Details Form
+│   ├── inventory.html         # Inward/Outward Stock Adjustment Panel
+│   ├── expiry.html            # Shelf-Life Monitoring & Quarantining Table
+│   ├── prediction.html        # Interactive Forecast & Mathematical Breakdown
+│   └── reports.html           # Comprehensive Reports & CSV Exporter
+│
+└── static/
+    ├── css/
+    │   └── style.css          # Healthcare UI Theme & Modern Cards
+    └── js/
+        └── script.js          # Client-Side Form Enhancements & Alerts
+```
+
+---
+
+## 13. Author & Acknowledgements
+
+- **Developed By**: **Akash Rajput**
+- **Email**: [akashrajput6248@gmail.com](mailto:akashrajput6248@gmail.com)
+- **Degree**: Master of Computer Applications (MCA) – Artificial Intelligence & Machine Learning
+- **Academic Project**: Python Mini Project (Healthcare Inventory & Predictive Analysis)
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ for pharmacy managers, healthcare staff, and MCA academic evaluation.</sub>
+</div>

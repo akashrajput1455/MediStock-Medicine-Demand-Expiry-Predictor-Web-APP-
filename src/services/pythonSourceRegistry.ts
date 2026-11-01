@@ -350,5 +350,32 @@ scikit-learn==1.4.2
 Werkzeug==3.0.3
 python-dotenv==1.0.1
 `
+  },
+  {
+    path: 'README.md',
+    name: 'README.md',
+    category: 'doc',
+    description: 'Comprehensive GitHub documentation, installation instructions, mathematical formulas, and MCA Viva Voce preparation guide.',
+    content: `# MediStock – Medicine Demand & Expiry Predictor
+MCA (Artificial Intelligence & Machine Learning) Python Mini Project
+Developed by Akash Rajput (akashrajput6248@gmail.com)
+
+Technology Stack:
+- Backend: Python 3.10+, Flask 3.0.3, Flask-Session
+- Database: MySQL 8.x, mysql-connector-python
+- Data Science: Pandas 2.2.2, NumPy 1.26.4
+- Frontend: HTML5, CSS3, Bootstrap 5.3, Bootstrap Icons, Chart.js
+- Currency: Indian Rupees (INR / ₹)
+
+Quick Setup:
+1. Import database.sql into MySQL Server (medistock_db)
+2. Update MySQL password in config.py
+3. Run: pip install -r requirements.txt
+4. Run: python app.py
+5. Open: http://127.0.0.1:5000 (admin / admin123)
+
+See root README.md for complete mathematical formulations, system architecture, and viva preparation guide.
+`
   }
 ];
+
