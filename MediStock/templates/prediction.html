@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Demand Prediction – MediStock{% endblock %}
+{% block breadcrumb %}AI / ML Demand Forecasting Model{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Medicine Demand & Procurement Predictor</h4>
+            <p class="text-muted small mb-0">Transparent statistical and machine learning model using Pandas & NumPy to forecast next-month pharmacy demand.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill">
+                <i class="bi bi-cpu me-1"></i> Python AI/ML Mini Project
+            </span>
+        </div>
+    </div>
+
+    <!-- Medicine & Algorithm Selection Card -->
+    <div class="card card-custom p-4 mb-4">
+        <form method="GET" action="{{ url_for('prediction.index') }}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold text-muted">Select Medicine to Analyze</label>
+                <select name="medicine_id" class="form-select" onchange="this.form.submit()">
+                    {% for m in medicines %}
+                    <option value="{{ m.medicine_id }}" {% if selected_med_id == m.medicine_id %}selected{% endif %}>
+                        {{ m.medicine_name }} (Batch: {{ m.batch_number }}) - Stock: {{ m.quantity }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">Forecasting Algorithm</label>
+                <select name="method" class="form-select" onchange="this.form.submit()">
+                    <option value="linear_regression" {% if method == 'linear_regression' %}selected{% endif %}>
+                        Linear Regression (Ordinary Least Squares: y = mx + c)
+                    </option>
+                    <option value="moving_average" {% if method == 'moving_average' %}selected{% endif %}>
+                        Simple Moving Average (SMA - Last 3 Periods)
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-calculator me-1"></i> Compute Forecast
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if result %}
+        {% if not result.sufficient_data %}
+            <!-- Insufficient Data Alert -->
+            <div class="alert alert-warning p-4 rounded-3 shadow-sm mb-4">
+                <div class="d-flex align-items-start gap-3">
+                    <i class="bi bi-info-circle-fill fs-3 text-warning"></i>
+                    <div>
+                        <h5 class="fw-bold mb-1">Insufficient Historical Sales Data</h5>
+                        <p class="mb-2 text-muted">{{ result.message }}</p>
+                        <p class="small mb-0 text-muted">
+                            To ensure high prediction reliability, the system requires at least 2 historical consumption periods. 
+                            You can record outpatient dispensations in the <strong>Inventory Flow</strong> module to generate sales history.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Forecast Result Cards -->
+            <div class="row g-3 mb-4">
+                <!-- 1. Predicted Next Month Demand -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-custom p-3 border-start border-4 border-primary h-100">
+                        <span class="text-muted small fw-semibold">Predicted Demand (Next Month)</span>
+                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                            <h2 class="fw-bold text-primary mb-0">{{ result.predicted_units }}</h2>
+                            <span class="text-muted small">units</span>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            <i class="bi bi-graph-up text-primary me-1"></i> Trend: <strong>{{ result.slope_trend }}</strong>
+                        </small>
+                    </div>
+                </div>
+
+                <!-- 2. Current Stock In Inventory -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-custom p-3 border-start border-4 border-info h-100">
+                        <span class="text-muted small fw-semibold">Current Available Stock</span>
+                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                            <h2 class="fw-bold text-dark mb-0">{{ result.current_stock }}</h2>
+                            <span class="text-muted small">units</span>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            Min Safety Threshold: <strong>{{ result.minimum_stock }} units</strong>
+                        </small>
+                    </div>
+                </div>
+
+                <!-- 3. Stock Health & Deficit Status -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-custom p-3 border-start border-4 {% if result.stock_status == 'Deficit' %}border-warning{% else %}border-success{% endif %} h-100">
+                        <span class="text-muted small fw-semibold">Stock Adequacy Status</span>
+                        <div class="mt-2">
+                            {% if result.stock_status == 'Deficit' %}
+                                <span class="badge bg-warning text-dark fs-6 px-3 py-2">Stock Deficit Expected</span>
+                            {% else %}
+                                <span class="badge bg-success text-white fs-6 px-3 py-2">Stock Sufficient</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            Priority: <strong>{{ result.urgency_level }}</strong>
+                        </small>
+                    </div>
+                </div>
+
+                <!-- 4. Recommended Order Quantity -->
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-custom p-3 border-start border-4 border-success h-100">
+                        <span class="text-muted small fw-semibold">Recommended Purchase Order</span>
+                        <div class="d-flex align-items-baseline gap-2 mt-2">
+                            <h2 class="fw-bold {% if result.recommended_reorder > 0 %}text-success{% else %}text-muted{% endif %} mb-0">
+                                {{ result.recommended_reorder }}
+                            </h2>
+                            <span class="text-muted small">units</span>
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            Includes +{{ result.safety_stock_buffer }} units safety stock buffer
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization and Historical Table -->
+            <div class="row g-3 mb-4">
+                <!-- Consumption Chart -->
+                <div class="col-lg-7">
+                    <div class="card card-custom p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-dark mb-0">Historical Consumption vs Forecast</h6>
+                            <span class="badge bg-light text-muted border">{{ selected_medicine.medicine_name }}</span>
+                        </div>
+                        <div style="height: 270px; position: relative;">
+                            <canvas id="predictionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historical Table -->
+                <div class="col-lg-5">
+                    <div class="card card-custom p-4 h-100">
+                        <h6 class="fw-bold text-dark mb-3">Historical Monthly Consumption</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.86rem;">
+                                <thead class="table-light text-muted">
+                                    <tr>
+                                        <th>Month / Period</th>
+                                        <th class="text-end">Units Sold</th>
+                                        <th class="text-end">Deviation from Mean</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in result.historical_data %}
+                                    <tr>
+                                        <td class="fw-semibold text-dark">{{ row.month }}</td>
+                                        <td class="text-end fw-bold">{{ row.units }}</td>
+                                        <td class="text-end text-muted">
+                                            {% set diff = row.units - result.average_monthly_consumption %}
+                                            <span class="{% if diff > 0 %}text-success{% elif diff < 0 %}text-danger{% endif %}">
+                                                {% if diff > 0 %}+{% endif %}{{ "%.1f"|format(diff) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="table-light fw-bold">
+                                        <td>Average Consumption</td>
+                                        <td class="text-end text-primary">{{ result.average_monthly_consumption }}</td>
+                                        <td class="text-end text-muted">&plusmn; 0.0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transparent Mathematical Walkthrough for MCA Viva -->
+            <div class="card card-custom p-4 mb-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="rounded p-2 bg-primary-subtle text-primary">
+                        <i class="bi bi-mortarboard-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">Mathematical Logic & Formula Walkthrough (MCA Project Documentation)</h6>
+                        <small class="text-muted">Transparent, explainable calculations using Python, NumPy arrays and Pandas DataFrames.</small>
+                    </div>
+                </div>
+                
+                <div class="bg-light p-3 rounded-3 border mb-3">
+                    <h6 class="fw-bold text-dark small mb-1">{{ result.formula_used }}</h6>
+                    <pre class="mb-0 text-muted" style="white-space: pre-wrap; font-size: 0.85rem;">{{ result.formula_details }}</pre>
+                </div>
+
+                <div class="row g-3 small text-muted">
+                    <div class="col-md-4">
+                        <div class="border p-2 rounded-2 bg-white">
+                            <strong class="text-dark d-block">1. Stock Deficit Check:</strong>
+                            <code>Deficit = (Predicted Demand + Min Stock) - Available Stock</code>
+                            <div class="text-dark mt-1">Deficit = ({{ result.predicted_units }} + {{ result.minimum_stock }}) - {{ result.current_stock }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border p-2 rounded-2 bg-white">
+                            <strong class="text-dark d-block">2. Safety Buffer (20%):</strong>
+                            <code>Safety Stock = round(0.20 &times; Predicted Demand)</code>
+                            <div class="text-dark mt-1">Buffer = 20% &times; {{ result.predicted_units }} = {{ result.safety_stock_buffer }} units</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border p-2 rounded-2 bg-white">
+                            <strong class="text-dark d-block">3. Final Procurement Order:</strong>
+                            <code>Order Quantity = max(0, Deficit)</code>
+                            <div class="text-dark mt-1">Recommended Order: <strong>{{ result.recommended_reorder }} units</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if result and result.sufficient_data %}
+<script>
+const histMonths = {{ result.historical_data|map(attribute='month')|list|tojson }};
+const histUnits = {{ result.historical_data|map(attribute='units')|list|tojson }};
+
+// Append next month forecast point
+const chartLabels = [...histMonths, 'Next Month (Forecast)'];
+const actualDataset = [...histUnits, null];
+const forecastDataset = [...histUnits.map((u, i) => i === histUnits.length - 1 ? u : null), {{ result.predicted_units }}];
+
+new Chart(document.getElementById('predictionChart'), {
+    type: 'line',
+    data: {
+        labels: chartLabels,
+        datasets: [
+            {
+                label: 'Historical Consumption (Units)',
+                data: actualDataset,
+                borderColor: '#0284c7',
+                backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                borderWidth: 3,
+                tension: 0.2,
+                fill: true,
+                pointRadius: 5
+            },
+            {
+                label: 'Predicted Next Month Demand',
+                data: forecastDataset,
+                borderColor: '#10b981',
+                borderDash: [5, 5],
+                borderWidth: 3,
+                pointRadius: 6,
+                pointBackgroundColor: '#10b981'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: false, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        },
+        plugins: {
+            legend: { position: 'top' }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

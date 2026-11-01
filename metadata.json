@@ -1,0 +1,6 @@
+{
+  "name": "MediStock – Medicine Demand & Expiry Predictor",
+  "description": "An MCA Python Mini Project for pharmacy stock management, automated shelf-life & expiry monitoring, and mathematical demand prediction.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

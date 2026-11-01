@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Medicine – MediStock{% endblock %}
+{% block breadcrumb %}Edit Medicine #{{ medicine_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+            
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">Update Medicine Information</h4>
+                    <p class="text-muted small mb-0">Modify specifications or batch data for medicine record #{{ medicine_id }}.</p>
+                </div>
+                <a href="{{ url_for('medicines.index') }}" class="btn btn-outline-secondary btn-sm rounded-3">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Catalog
+                </a>
+            </div>
+
+            <div class="card card-custom p-4 shadow-sm">
+                <form method="POST" action="{{ url_for('medicines.edit', medicine_id=medicine_id) }}" id="editMedicineForm">
+                    
+                    <h6 class="fw-bold text-primary mb-3 pb-2 border-bottom">
+                        <i class="bi bi-info-circle me-1"></i> 1. Basic Identification
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Medicine Name <span class="text-danger">*</span></label>
+                            <input type="text" name="medicine_name" class="form-control" required value="{{ med.medicine_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Category <span class="text-danger">*</span></label>
+                            <select name="category" class="form-select" required>
+                                {% for cat in ["Analgesics & Antipyretics", "Antibiotics", "Antihistamines", "Anti-inflammatory", "Antacids & Antiulcerants", "Antidiabetic", "Cardiovascular", "Respiratory & Cough", "Vitamins & Supplements", "Rehydration Solutions"] %}
+                                    <option value="{{ cat }}" {% if med.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Manufacturer <span class="text-danger">*</span></label>
+                            <input type="text" name="manufacturer" class="form-control" required value="{{ med.manufacturer }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Batch Number <span class="text-danger">*</span></label>
+                            <input type="text" name="batch_number" class="form-control" required value="{{ med.batch_number }}">
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-3 pb-2 border-bottom">
+                        <span class="fw-bold me-1">₹</span> 2. Pricing & Stock Levels (INR)
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-muted">Purchase Cost (₹) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0.01" name="purchase_price" class="form-control" required value="{{ med.purchase_price }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-muted">Selling Price (₹) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0.01" name="selling_price" class="form-control" required value="{{ med.selling_price }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-muted">Available Quantity <span class="text-danger">*</span></label>
+                            <input type="number" min="0" name="quantity" class="form-control" required value="{{ med.quantity }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-muted">Minimum Stock Threshold <span class="text-danger">*</span></label>
+                            <input type="number" min="1" name="minimum_stock" class="form-control" required value="{{ med.minimum_stock }}">
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-3 pb-2 border-bottom">
+                        <i class="bi bi-calendar-event me-1"></i> 3. Shelf Life & Procurement
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-muted">Manufacturing Date <span class="text-danger">*</span></label>
+                            <input type="date" name="manufacturing_date" id="mfgDate" class="form-control" required value="{{ med.manufacturing_date }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-muted">Expiry Date <span class="text-danger">*</span></label>
+                            <input type="date" name="expiry_date" id="expDate" class="form-control" required value="{{ med.expiry_date }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-muted">Supplier / Distributor <span class="text-danger">*</span></label>
+                            <input type="text" name="supplier_name" class="form-control" required value="{{ med.supplier_name }}">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{{ url_for('medicines.index') }}" class="btn btn-light px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                            <i class="bi bi-check-circle me-1"></i> Update Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('editMedicineForm').addEventListener('submit', function(e) {
+    const mfg = document.getElementById('mfgDate').value;
+    const exp = document.getElementById('expDate').value;
+    if (mfg && exp && exp <= mfg) {
+        e.preventDefault();
+        alert('Validation Error: Expiry date must be after manufacturing date.');
+    }
+});
+</script>
+{% endblock %}

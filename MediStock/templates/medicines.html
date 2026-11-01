@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Medicines Catalog – MediStock{% endblock %}
+{% block breadcrumb %}Medicine Master Catalog{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Medicine Inventory Master</h4>
+            <p class="text-muted small mb-0">Manage pharmaceutical inventory, batch numbers, manufacturer specifications, and pricing.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('medicines.add') }}" class="btn btn-primary btn-sm px-3 rounded-3 shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Register New Medicine
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="card card-custom p-3 mb-4">
+        <form method="GET" action="{{ url_for('medicines.index') }}" class="row g-2 align-items-center">
+            <!-- Search Text -->
+            <div class="col-md-4">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, batch, supplier..." value="{{ search_query }}">
+                </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="col-md-3">
+                <select name="category" class="form-select form-select-sm">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.category }}" {% if selected_category == cat.category %}selected{% endif %}>{{ cat.category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Stock Status Filter -->
+            <div class="col-md-3">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Stock Statuses</option>
+                    <option value="safe" {% if selected_status == 'safe' %}selected{% endif %}>Safe Stock (> Minimum)</option>
+                    <option value="low" {% if selected_status == 'low' %}selected{% endif %}>Low Stock (&le; Minimum)</option>
+                    <option value="out" {% if selected_status == 'out' %}selected{% endif %}>Out of Stock (0 units)</option>
+                    <option value="expired" {% if selected_status == 'expired' %}selected{% endif %}>Expired Batches</option>
+                </select>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+                <a href="{{ url_for('medicines.index') }}" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Medicine Table -->
+    <div class="card card-custom overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 0.86rem;">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th class="ps-3">ID</th>
+                        <th>Medicine Details</th>
+                        <th>Category</th>
+                        <th>Batch No.</th>
+                        <th>Pricing (₹)</th>
+                        <th>Stock Level</th>
+                        <th>Dates (Mfg / Exp)</th>
+                        <th>Shelf Status</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines %}
+                    <tr>
+                        <td class="ps-3 text-muted fw-mono">#{{ med.medicine_id }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ med.medicine_name }}</div>
+                            <small class="text-muted">{{ med.manufacturer }} &bull; {{ med.supplier_name }}</small>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ med.category }}</span></td>
+                        <td><code class="text-primary fw-semibold">{{ med.batch_number }}</code></td>
+                        <td>
+                            <div>Buy: <span class="fw-semibold">₹{{ "%.2f"|format(med.purchase_price) }}</span></div>
+                            <div class="text-muted small">Sell: ₹{{ "%.2f"|format(med.selling_price) }}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold {% if med.quantity == 0 %}text-danger{% elif med.quantity <= med.minimum_stock %}text-warning{% else %}text-dark{% endif %}">
+                                    {{ med.quantity }}
+                                </span>
+                                <span class="text-muted small">/ min {{ med.minimum_stock }}</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 4px; width: 80px;">
+                                {% set pct = (med.quantity / (med.minimum_stock * 2) * 100) if med.minimum_stock > 0 else 100 %}
+                                <div class="progress-bar {% if med.quantity == 0 %}bg-danger{% elif med.quantity <= med.minimum_stock %}bg-warning{% else %}bg-success{% endif %}" 
+                                     style="width: {{ [pct, 100]|min }}%;"></div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small"><span class="text-muted">Mfg:</span> {{ med.manufacturing_date }}</div>
+                            <div class="small fw-semibold"><span class="text-muted">Exp:</span> {{ med.expiry_date }}</div>
+                        </td>
+                        <td>
+                            {% if med.expiry_status == 'EXPIRED' %}
+                                <span class="badge badge-danger-custom">Expired ({{ med.days_remaining }}d)</span>
+                            {% elif med.expiry_status == 'EXPIRING_30_DAYS' %}
+                                <span class="badge badge-dark-warning">&le; 30 Days Left</span>
+                            {% elif med.expiry_status == 'EXPIRING_60_DAYS' %}
+                                <span class="badge badge-warning-custom">&le; 60 Days Left</span>
+                            {% elif med.expiry_status == 'EXPIRING_90_DAYS' %}
+                                <span class="badge badge-info-custom">&le; 90 Days Left</span>
+                            {% else %}
+                                <span class="badge badge-safe">Safe Stock</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('medicines.edit', medicine_id=med.medicine_id) }}" class="btn btn-outline-secondary" title="Edit Medicine">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('medicines.delete', medicine_id=med.medicine_id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete {{ med.medicine_name }}?');">
+                                    <button type="submit" class="btn btn-outline-danger" title="Delete Medicine">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
+                            No medicine records found matching the specified filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-3 border-top bg-light text-muted small d-flex justify-content-between align-items-center">
+            <span>Showing {{ medicines|length }} medicine record(s)</span>
+            <span>All stock operations are synchronized with MySQL</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

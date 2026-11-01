@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & CSV Exports – MediStock{% endblock %}
+{% block breadcrumb %}Comprehensive Reports & CSV Data Export{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Reports & Analytics Export Portal</h4>
+            <p class="text-muted small mb-0">Generate audit-ready pharmacy reports and export raw datasets in CSV format using Python <code>csv</code>.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-outline-secondary btn-sm px-3 rounded-3">
+                <i class="bi bi-printer me-1"></i> Print / PDF
+            </button>
+            <a href="{{ url_for('reports.export_csv', type=report_type) }}" class="btn btn-primary btn-sm px-3 rounded-3 shadow-sm">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV File
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Type Tabs -->
+    <div class="card card-custom p-3 mb-4">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('reports.index', type='inventory') }}" class="btn btn-sm {% if report_type == 'inventory' %}btn-primary{% else %}btn-light border{% endif %} rounded-pill px-3">
+                Complete Inventory
+            </a>
+            <a href="{{ url_for('reports.index', type='low_stock') }}" class="btn btn-sm {% if report_type == 'low_stock' %}btn-warning text-dark{% else %}btn-light border{% endif %} rounded-pill px-3">
+                Low Stock Threshold
+            </a>
+            <a href="{{ url_for('reports.index', type='expired') }}" class="btn btn-sm {% if report_type == 'expired' %}btn-danger{% else %}btn-light border{% endif %} rounded-pill px-3">
+                Expired Batches
+            </a>
+            <a href="{{ url_for('reports.index', type='expiring_soon') }}" class="btn btn-sm {% if report_type == 'expiring_soon' %}btn-warning text-dark{% else %}btn-light border{% endif %} rounded-pill px-3">
+                Expiring Soon (&le; 90 Days)
+            </a>
+            <a href="{{ url_for('reports.index', type='consumption') }}" class="btn btn-sm {% if report_type == 'consumption' %}btn-info text-dark{% else %}btn-light border{% endif %} rounded-pill px-3">
+                Sales & Consumption
+            </a>
+            <a href="{{ url_for('reports.index', type='demand_forecast') }}" class="btn btn-sm {% if report_type == 'demand_forecast' %}btn-success{% else %}btn-light border{% endif %} rounded-pill px-3">
+                Demand Forecast & Reorder
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Display Table -->
+    <div class="card card-custom overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold text-dark mb-0">{{ report_title }}</h6>
+                <small class="text-muted">Generated on: {{ today }} | Total Rows: {{ data|length }}</small>
+            </div>
+            <a href="{{ url_for('reports.export_csv', type=report_type) }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download me-1"></i> Export <code>.csv</code>
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            {% if report_type == 'consumption' %}
+                <!-- Consumption Report Table -->
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th class="ps-3">Sale ID</th>
+                            <th>Date</th>
+                            <th>Medicine</th>
+                            <th>Batch</th>
+                            <th>Units Dispensed</th>
+                            <th>Revenue (₹)</th>
+                            <th>Patient / Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <td class="ps-3 text-muted">#{{ row.sale_id }}</td>
+                            <td>{{ row.sale_date }}</td>
+                            <td class="fw-bold text-dark">{{ row.medicine_name }}</td>
+                            <td><code>{{ row.batch_number }}</code></td>
+                            <td class="fw-bold text-primary">{{ row.quantity_sold }}</td>
+                            <td class="fw-semibold">₹{{ "%.2f"|format(row.total_amount) }}</td>
+                            <td class="text-muted">{{ row.patient_reference }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center py-4 text-muted">No sales records available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            {% elif report_type == 'demand_forecast' %}
+                <!-- Demand Forecast Report Table -->
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th class="ps-3">Medicine Name</th>
+                            <th>Batch</th>
+                            <th>Current Stock</th>
+                            <th>Safety Min</th>
+                            <th>Predicted Next Demand</th>
+                            <th>Reorder Quantity</th>
+                            <th>Procurement Urgency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <td class="ps-3 fw-bold text-dark">{{ row.medicine_name }}</td>
+                            <td><code>{{ row.batch_number }}</code></td>
+                            <td>{{ row.current_stock }} units</td>
+                            <td class="text-muted">{{ row.minimum_stock }} units</td>
+                            <td class="fw-bold text-primary">
+                                {% if row.predicted_demand != 'N/A' %}{{ row.predicted_demand }} units{% else %}Insufficient Data{% endif %}
+                            </td>
+                            <td class="fw-bold {% if row.recommended_reorder > 0 %}text-success{% else %}text-muted{% endif %}">
+                                {{ row.recommended_reorder }} units
+                            </td>
+                            <td>
+                                <span class="badge {% if 'Critical' in row.urgency or 'High' in row.urgency %}bg-danger{% elif 'Medium' in row.urgency %}bg-warning text-dark{% else %}bg-light text-muted border{% endif %}">
+                                    {{ row.urgency }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center py-4 text-muted">No medicines available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+            {% else %}
+                <!-- General Inventory & Expiry Table -->
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th class="ps-3">ID</th>
+                            <th>Medicine Name</th>
+                            <th>Category</th>
+                            <th>Batch No.</th>
+                            <th>Purchase / Sell (₹)</th>
+                            <th>Available Qty</th>
+                            <th>Expiry Date</th>
+                            <th>Days Remaining</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <td class="ps-3 text-muted">#{{ row.medicine_id }}</td>
+                            <td class="fw-bold text-dark">{{ row.medicine_name }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ row.category }}</span></td>
+                            <td><code>{{ row.batch_number }}</code></td>
+                            <td>₹{{ "%.2f"|format(row.purchase_price) }} / ₹{{ "%.2f"|format(row.selling_price) }}</td>
+                            <td class="fw-bold">{{ row.quantity }}</td>
+                            <td>{{ row.expiry_date }}</td>
+                            <td>
+                                {% if row.days_remaining < 0 %}
+                                    <span class="text-danger fw-bold">{{ row.days_remaining|abs }}d ago</span>
+                                {% else %}
+                                    <span>{{ row.days_remaining }} days</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.expiry_status == 'EXPIRED' %}
+                                    <span class="badge badge-danger-custom">Expired</span>
+                                {% elif row.expiry_status == 'EXPIRING_30_DAYS' %}
+                                    <span class="badge badge-dark-warning">&le; 30 Days</span>
+                                {% elif row.quantity <= row.minimum_stock %}
+                                    <span class="badge badge-warning-custom">Low Stock</span>
+                                {% else %}
+                                    <span class="badge badge-safe">Safe</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="9" class="text-center py-4 text-muted">No records matching report criteria.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+        <div class="card-footer bg-light py-2 text-muted small text-end">
+            MediStock Automated Reporting Engine &bull; CSV Export powered by Python <code>csv</code>
+        </div>
+    </div>
+</div>
+{% endblock %}

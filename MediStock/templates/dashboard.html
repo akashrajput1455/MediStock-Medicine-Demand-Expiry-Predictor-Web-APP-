@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard – MediStock Pharmacy System{% endblock %}
+{% block breadcrumb %}Executive Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Header Banner -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Pharmacy Stock & Expiry Overview</h4>
+            <p class="text-muted small mb-0">Real-time inventory analysis and automated shelf-life surveillance.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('prediction.index') }}" class="btn btn-outline-primary btn-sm px-3 rounded-3">
+                <i class="bi bi-graph-up-arrow me-1"></i> Predict Demand
+            </a>
+            <a href="{{ url_for('reports.export_csv', type='inventory') }}" class="btn btn-outline-secondary btn-sm px-3 rounded-3">
+                <i class="bi bi-download me-1"></i> Export Inventory CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Banner for Expired / Expiring Soon if any -->
+    {% if metrics.expired_count > 0 or metrics.low_stock_count > 0 %}
+    <div class="alert alert-warning border-start border-4 border-warning d-flex align-items-center justify-content-between mb-4 rounded-3 shadow-sm" role="alert">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+            <div>
+                <strong class="text-dark">Inventory Attention Required:</strong>
+                <span class="ms-1 text-muted">
+                    {% if metrics.expired_count > 0 %}<strong>{{ metrics.expired_count }}</strong> batch(es) have expired. {% endif %}
+                    {% if metrics.low_stock_count > 0 %}<strong>{{ metrics.low_stock_count }}</strong> medicine(s) are below safety minimum stock. {% endif %}
+                </span>
+            </div>
+        </div>
+        <a href="{{ url_for('expiry.index', status='expired') }}" class="btn btn-sm btn-warning text-dark fw-semibold px-3 rounded-pill">
+            Review Expiry Watchlist
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- 6 KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Medicines -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card card-custom stat-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold">Total Medicines</span>
+                    <div class="rounded-2 p-2 bg-primary-subtle text-primary">
+                        <i class="bi bi-capsule"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold text-dark mb-1">{{ metrics.total_medicines }}</h3>
+                <small class="text-muted"><i class="bi bi-check-circle text-success me-1"></i> Active SKUs in catalog</small>
+            </div>
+        </div>
+
+        <!-- 2. Total Available Stock -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card card-custom stat-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold">Available Units</span>
+                    <div class="rounded-2 p-2 bg-info-subtle text-info">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold text-dark mb-1">{{ metrics.total_stock_units }}</h3>
+                <small class="text-muted"><i class="bi bi-layers text-info me-1"></i> Units across all batches</small>
+            </div>
+        </div>
+
+        <!-- 3. Low Stock Medicines -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card card-custom stat-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold">Low Stock</span>
+                    <div class="rounded-2 p-2 bg-warning-subtle text-warning">
+                        <i class="bi bi-exclamation-circle"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold {% if metrics.low_stock_count > 0 %}text-warning{% else %}text-dark{% endif %} mb-1">{{ metrics.low_stock_count }}</h3>
+                <small class="text-muted"><i class="bi bi-arrow-down-short text-warning"></i> &le; minimum threshold</small>
+            </div>
+        </div>
+
+        <!-- 4. Expired Medicines -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card card-custom stat-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold">Expired Batches</span>
+                    <div class="rounded-2 p-2 bg-danger-subtle text-danger">
+                        <i class="bi bi-x-octagon"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold {% if metrics.expired_count > 0 %}text-danger{% else %}text-dark{% endif %} mb-1">{{ metrics.expired_count }}</h3>
+                <small class="text-muted"><i class="bi bi-shield-x text-danger me-1"></i> Blocked from dispensing</small>
+            </div>
+        </div>
+
+        <!-- 5. Expiring Soon -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card card-custom stat-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold">Expiring Soon</span>
+                    <div class="rounded-2 p-2 bg-orange-subtle text-dark" style="background:#ffedd5;">
+                        <i class="bi bi-clock-history text-warning"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold text-dark mb-1">{{ metrics.expiring_soon_count }}</h3>
+                <small class="text-muted"><i class="bi bi-hourglass-split text-warning me-1"></i> Within &le; 90 days</small>
+            </div>
+        </div>
+
+        <!-- 6. Total Inventory Value -->
+        <div class="col-sm-6 col-xl-2">
+            <div class="card card-custom stat-card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="text-muted small fw-semibold">Inventory Valuation</span>
+                    <div class="rounded-2 p-2 bg-success-subtle text-success fw-bold d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        ₹
+                    </div>
+                </div>
+                <h3 class="fw-bold text-success mb-1">₹{{ "%.2f"|format(metrics.total_inventory_value) }}</h3>
+                <small class="text-muted"><i class="bi bi-graph-up text-success me-1"></i> Cost price valuation (INR)</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1: Category Distribution & Monthly Consumption -->
+    <div class="row g-3 mb-4">
+        <!-- Chart 1: Category Distribution -->
+        <div class="col-lg-5">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0">1. Category Distribution</h6>
+                    <span class="badge bg-light text-muted border">SKU Share</span>
+                </div>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="mt-3 pt-3 border-top small text-muted text-center">
+                    Distribution of medicine categories stocked in MySQL database
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Monthly Consumption Trend -->
+        <div class="col-lg-7">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0">2. Monthly Medicine Consumption (Units Sold)</h6>
+                    <span class="badge bg-light text-muted border">Historical Sales</span>
+                </div>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="monthlyConsumptionChart"></canvas>
+                </div>
+                <div class="mt-3 pt-3 border-top small text-muted text-center">
+                    Aggregated monthly sales volume used as training data for demand prediction
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2: Stock Status Distribution & Medicine Demand Trend -->
+    <div class="row g-3 mb-4">
+        <!-- Chart 3: Stock Status Distribution -->
+        <div class="col-lg-5">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0">3. Stock Health Distribution</h6>
+                    <span class="badge bg-light text-muted border">Operational Status</span>
+                </div>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="stockStatusChart"></canvas>
+                </div>
+                <div class="mt-3 pt-3 border-top small text-muted text-center">
+                    Categorization into Safe, Low Stock, Expiring Soon, and Expired Batches
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 4: Demand Trend (Paracetamol 650mg Example) -->
+        <div class="col-lg-7">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">4. Medicine Demand Trend vs Forecast</h6>
+                        <small class="text-muted">Paracetamol 650mg (Linear Regression Projection)</small>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">MCA Model</span>
+                </div>
+                <div style="height: 250px; position: relative;">
+                    <canvas id="demandTrendChart"></canvas>
+                </div>
+                <div class="mt-3 pt-3 border-top small text-muted text-center">
+                    Historical monthly demand (June-Oct 2026) with calculated linear regression trend line
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Section: Recent Activities & Critical Watchlist -->
+    <div class="row g-3">
+        <!-- Recent Inventory Activity -->
+        <div class="col-lg-7">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0">Recent Inventory Transactions</h6>
+                    <a href="{{ url_for('inventory.index') }}" class="small text-primary text-decoration-none">View All &rarr;</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Medicine</th>
+                                <th>Type</th>
+                                <th>Qty</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in recent_transactions %}
+                            <tr>
+                                <td class="text-muted">{{ tx.transaction_date }}</td>
+                                <td class="fw-semibold text-dark">{{ tx.medicine_name }}</td>
+                                <td>
+                                    {% if tx.transaction_type == 'IN' %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">STOCK IN</span>
+                                    {% elif tx.transaction_type == 'OUT' %}
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle">STOCK OUT</span>
+                                    {% elif tx.transaction_type == 'EXPIRED_DISCARD' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">DISCARDED</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary">{{ tx.transaction_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">{{ tx.quantity }}</td>
+                                <td class="text-muted small text-truncate" style="max-width: 180px;">{{ tx.description }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-3">No recent transactions recorded.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority Attention List -->
+        <div class="col-lg-5">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0">Priority Attention Items</h6>
+                    <a href="{{ url_for('expiry.index') }}" class="small text-primary text-decoration-none">Expiry List &rarr;</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for item in alert_medicines %}
+                    <div class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center border-bottom">
+                        <div>
+                            <div class="fw-semibold text-dark" style="font-size: 0.88rem;">{{ item.medicine_name }}</div>
+                            <small class="text-muted">Batch: {{ item.batch_number }} | Stock: {{ item.quantity }} units</small>
+                        </div>
+                        <div class="text-end">
+                            {% if item.expiry_status == 'EXPIRED' %}
+                                <span class="badge bg-danger text-white">EXPIRED</span>
+                            {% elif item.expiry_status == 'EXPIRING_30_DAYS' %}
+                                <span class="badge bg-warning text-dark">&le; 30 Days</span>
+                            {% elif item.quantity <= item.minimum_stock %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Low Stock</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4 small">
+                        <i class="bi bi-shield-check text-success fs-3 d-block mb-1"></i>
+                        All inventory stocks are within safe operational parameters.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Category Chart Data
+const categoryLabels = {{ metrics.category_counts.keys()|list|tojson }};
+const categoryData = {{ metrics.category_counts.values()|list|tojson }};
+
+new Chart(document.getElementById('categoryChart'), {
+    type: 'doughnut',
+    data: {
+        labels: categoryLabels,
+        datasets: [{
+            data: categoryData,
+            backgroundColor: ['#0284c7', '#0d9488', '#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#64748b'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+    }
+});
+
+// Monthly Consumption Chart
+const monthLabels = {{ monthly_sales|map(attribute='month_label')|list|tojson }};
+const monthUnits = {{ monthly_sales|map(attribute='total_units')|list|tojson }};
+
+new Chart(document.getElementById('monthlyConsumptionChart'), {
+    type: 'bar',
+    data: {
+        labels: monthLabels,
+        datasets: [{
+            label: 'Units Dispensed / Sold',
+            data: monthUnits,
+            backgroundColor: '#0284c7',
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        },
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
+
+// Stock Health Status Chart
+const statusLabels = {{ metrics.stock_status_breakdown.keys()|list|tojson }};
+const statusValues = {{ metrics.stock_status_breakdown.values()|list|tojson }};
+
+new Chart(document.getElementById('stockStatusChart'), {
+    type: 'pie',
+    data: {
+        labels: statusLabels,
+        datasets: [{
+            data: statusValues,
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#dc2626', '#f97316'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+    }
+});
+
+// Demand Trend Chart (Paracetamol example)
+new Chart(document.getElementById('demandTrendChart'), {
+    type: 'line',
+    data: {
+        labels: ['June 2026', 'July 2026', 'August 2026', 'September 2026', 'October 2026', 'November (Forecast)'],
+        datasets: [
+            {
+                label: 'Actual Consumption',
+                data: [100, 120, 110, 130, 140, null],
+                borderColor: '#0284c7',
+                backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointRadius: 5
+            },
+            {
+                label: 'Linear Regression Forecast',
+                data: [102, 111, 120, 129, 138, 147],
+                borderColor: '#f59e0b',
+                borderDash: [5, 5],
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: '#f59e0b'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: false, min: 80, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+        },
+        plugins: {
+            legend: { position: 'top' }
+        }
+    }
+});
+</script>
+{% endblock %}

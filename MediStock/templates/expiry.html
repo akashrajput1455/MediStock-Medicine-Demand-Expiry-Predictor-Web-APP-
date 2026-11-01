@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Expiry Date Monitoring – MediStock{% endblock %}
+{% block breadcrumb %}Automated Expiry & Shelf-Life Watchlist{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="fw-bold text-dark mb-1">Medicine Expiry Monitoring & Surveillance</h4>
+            <p class="text-muted small mb-0">Automated shelf-life calculation (Python <code>datetime</code>), safety classification, and FEFO dispensing prioritization.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('reports.export_csv', type='expiring_soon') }}" class="btn btn-outline-warning text-dark btn-sm rounded-3">
+                <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Expiring Batches
+            </a>
+            <a href="{{ url_for('reports.export_csv', type='expired') }}" class="btn btn-outline-danger btn-sm rounded-3">
+                <i class="bi bi-trash me-1"></i> Export Expired List
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 Risk Level Stat Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Expired -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-custom p-3 border-start border-4 border-danger h-100">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="text-muted small fw-semibold">Expired Batches</span>
+                    <span class="badge bg-danger text-white">Critical Risk</span>
+                </div>
+                <h3 class="fw-bold text-danger mb-0">{{ summary.expired_count }}</h3>
+                <small class="text-danger mt-1 d-block">
+                    ₹{{ "%.2f"|format(summary.expired_inventory_value) }} value to write off
+                </small>
+            </div>
+        </div>
+
+        <!-- Expiring <= 30 Days -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-custom p-3 border-start border-4 border-warning h-100" style="border-left-color: #f97316 !important;">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="text-muted small fw-semibold">Expiring &le; 30 Days</span>
+                    <span class="badge bg-dark-warning text-dark">High Priority</span>
+                </div>
+                <h3 class="fw-bold text-dark mb-0">{{ summary.expiring_30_count }}</h3>
+                <small class="text-muted mt-1 d-block">
+                    ₹{{ "%.2f"|format(summary.at_risk_value_30_days) }} at immediate risk
+                </small>
+            </div>
+        </div>
+
+        <!-- Expiring <= 60 & 90 Days -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-custom p-3 border-start border-4 border-warning h-100">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="text-muted small fw-semibold">Expiring in 31–90 Days</span>
+                    <span class="badge bg-warning-subtle text-warning">Medium Alert</span>
+                </div>
+                <h3 class="fw-bold text-dark mb-0">{{ summary.expiring_60_count + summary.expiring_90_count }}</h3>
+                <small class="text-muted mt-1 d-block">Track through FEFO dispensing</small>
+            </div>
+        </div>
+
+        <!-- Safe Stock -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-custom p-3 border-start border-4 border-success h-100">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <span class="text-muted small fw-semibold">Safe Stock (> 90 Days)</span>
+                    <span class="badge bg-success-subtle text-success">Healthy</span>
+                </div>
+                <h3 class="fw-bold text-success mb-0">{{ summary.safe_count }}</h3>
+                <small class="text-muted mt-1 d-block">Adequate remaining shelf-life</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="{{ url_for('expiry.index', status='all') }}" class="btn btn-sm {% if current_filter == 'all' %}btn-primary{% else %}btn-light border{% endif %} rounded-pill px-3">
+            All Medicines ({{ summary.total_medicines }})
+        </a>
+        <a href="{{ url_for('expiry.index', status='expired') }}" class="btn btn-sm {% if current_filter == 'expired' %}btn-danger{% else %}btn-light border{% endif %} rounded-pill px-3">
+            Expired Batches ({{ summary.expired_count }})
+        </a>
+        <a href="{{ url_for('expiry.index', status='30') }}" class="btn btn-sm {% if current_filter == '30' %}btn-warning text-dark{% else %}btn-light border{% endif %} rounded-pill px-3">
+            Expiring &le; 30 Days ({{ summary.expiring_30_count }})
+        </a>
+        <a href="{{ url_for('expiry.index', status='60') }}" class="btn btn-sm {% if current_filter == '60' %}btn-warning text-dark{% else %}btn-light border{% endif %} rounded-pill px-3">
+            Expiring &le; 60 Days ({{ summary.expiring_60_count }})
+        </a>
+        <a href="{{ url_for('expiry.index', status='90') }}" class="btn btn-sm {% if current_filter == '90' %}btn-info text-dark{% else %}btn-light border{% endif %} rounded-pill px-3">
+            Expiring &le; 90 Days ({{ summary.expiring_90_count }})
+        </a>
+        <a href="{{ url_for('expiry.index', status='safe') }}" class="btn btn-sm {% if current_filter == 'safe' %}btn-success{% else %}btn-light border{% endif %} rounded-pill px-3">
+            Safe Stock ({{ summary.safe_count }})
+        </a>
+    </div>
+
+    <!-- Expiry Monitoring Table -->
+    <div class="card card-custom overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 0.86rem;">
+                <thead class="table-light text-muted">
+                    <tr>
+                        <th class="ps-3">Medicine</th>
+                        <th>Batch No.</th>
+                        <th>Expiry Date</th>
+                        <th>Days Remaining</th>
+                        <th>Classification</th>
+                        <th>Units at Risk</th>
+                        <th>Inventory Value (₹)</th>
+                        <th>Dispensing Policy</th>
+                        <th class="text-end pe-3">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines %}
+                    <tr class="{% if med.expiry_status == 'EXPIRED' %}table-danger-subtle bg-danger-subtle bg-opacity-25{% endif %}">
+                        <td class="ps-3">
+                            <span class="fw-bold text-dark">{{ med.medicine_name }}</span>
+                            <div class="small text-muted">{{ med.category }}</div>
+                        </td>
+                        <td><code>{{ med.batch_number }}</code></td>
+                        <td class="fw-semibold">{{ med.expiry_date }}</td>
+                        <td>
+                            {% if med.days_remaining < 0 %}
+                                <span class="fw-bold text-danger">{{ med.days_remaining|abs }} days ago</span>
+                            {% elif med.days_remaining == 0 %}
+                                <span class="fw-bold text-danger">Expires Today!</span>
+                            {% elif med.days_remaining <= 30 %}
+                                <span class="fw-bold text-warning">{{ med.days_remaining }} days left</span>
+                            {% else %}
+                                <span class="text-dark">{{ med.days_remaining }} days</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if med.expiry_status == 'EXPIRED' %}
+                                <span class="badge badge-danger-custom"><i class="bi bi-x-octagon-fill me-1"></i>Expired</span>
+                            {% elif med.expiry_status == 'EXPIRING_30_DAYS' %}
+                                <span class="badge badge-dark-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>&le; 30 Days</span>
+                            {% elif med.expiry_status == 'EXPIRING_60_DAYS' %}
+                                <span class="badge badge-warning-custom">&le; 60 Days</span>
+                            {% elif med.expiry_status == 'EXPIRING_90_DAYS' %}
+                                <span class="badge badge-info-custom">&le; 90 Days</span>
+                            {% else %}
+                                <span class="badge badge-safe"><i class="bi bi-check-circle-fill me-1"></i>Safe Stock</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-dark">{{ med.quantity }}</td>
+                        <td class="fw-semibold text-muted">₹{{ "%.2f"|format(med.stock_value) }}</td>
+                        <td>
+                            <small class="{% if med.expiry_status == 'EXPIRED' %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                {{ med.action_required }}
+                            </small>
+                        </td>
+                        <td class="text-end pe-3">
+                            {% if med.expiry_status == 'EXPIRED' and med.quantity > 0 %}
+                                <form method="POST" action="{{ url_for('expiry.quarantine_batch', medicine_id=med.medicine_id) }}" onsubmit="return confirm('Quarantine and write off {{ med.quantity }} units of expired batch {{ med.batch_number }}?');">
+                                    <button type="submit" class="btn btn-sm btn-danger px-2 py-1" title="Quarantine & Discard">
+                                        <i class="bi bi-trash-fill me-1"></i> Discard
+                                    </button>
+                                </form>
+                            {% elif med.expiry_status == 'EXPIRED' and med.quantity == 0 %}
+                                <span class="badge bg-secondary">Quarantined</span>
+                            {% else %}
+                                <a href="{{ url_for('inventory.index') }}" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Manage Stock">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="9" class="text-center py-4 text-muted">No medicines found matching this filter.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
